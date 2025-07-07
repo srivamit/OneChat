@@ -1,102 +1,49 @@
 "use client";
 
-import { useState, useEffect } from 'react';
 import type { User, Message } from '@/types';
 import { Card, CardContent, CardHeader, CardFooter } from '@/components/ui/card';
 import { ChatHeader } from './chat-header';
 import { ChatMessages } from './chat-messages';
 import { ChatInput } from './chat-input';
+import { useRouter } from 'next/navigation';
+import { Button } from '../ui/button';
+import { ArrowLeft } from 'lucide-react';
 
 interface ChatLayoutProps {
   currentUser: User;
   recipientUser: User;
+  messages: Message[];
+  isTyping: boolean;
+  onSendMessage: (text: string) => void;
+  onTypingChange: (isTyping: boolean) => void;
 }
 
-const initialMessages: Message[] = [
-  {
-    id: '1',
-    text: 'Hey! How have you been?',
-    senderId: 'user2',
-    timestamp: Date.now() - 1000 * 60 * 5,
-  },
-  {
-    id: '2',
-    text: "I'm doing great, thanks for asking! Just finished a big project. How about you?",
-    senderId: 'user1',
-    timestamp: Date.now() - 1000 * 60 * 4,
-  },
-];
+export const ChatLayout = ({
+  currentUser,
+  recipientUser,
+  messages,
+  isTyping,
+  onSendMessage,
+  onTypingChange,
+}: ChatLayoutProps) => {
 
-const aliceConversationalSnippets = [
-    "Just saw the funniest video, I'll send it to you later!",
-    "Ugh, this coffee is not kicking in today.",
-    "What are you up to this weekend?",
-    "I'm thinking of re-watching that series we talked about.",
-    "Did you see the news about that new tech gadget?",
-    "Random thought: are hotdogs sandwiches?",
-    "My cat is doing the funniest thing right now.",
-    "I need to remember to water my plants...",
-    "Feeling a bit hungry, what's for lunch?",
-    "This music is really helping me focus."
-];
-
-export const ChatLayout = ({ currentUser, recipientUser }: ChatLayoutProps) => {
-  const [messages, setMessages] = useState<Message[]>(initialMessages);
-  const [isTyping, setIsTyping] = useState(false);
-
-  // Simulate live messages from the recipient
-  useEffect(() => {
-    let timeoutId: NodeJS.Timeout;
-
-    const simulateReceivingMessage = () => {
-      // Schedule the next message reception
-      const nextMessageDelay = 8000 + Math.random() * 7000; // 8-15 seconds
-
-      timeoutId = setTimeout(() => {
-        setIsTyping(true);
-        const typingDuration = 1000 + Math.random() * 1500; // Recipient "types" for 1-2.5 seconds
-
-        // After "typing", send the message
-        setTimeout(() => {
-          const replyText = aliceConversationalSnippets[Math.floor(Math.random() * aliceConversationalSnippets.length)];
-          const newMessage: Message = {
-            id: String(Date.now()),
-            text: replyText,
-            senderId: recipientUser.id,
-            timestamp: Date.now(),
-          };
-
-          setIsTyping(false);
-          setMessages(prev => [...prev, newMessage]);
-          
-          // Trigger the next cycle
-          simulateReceivingMessage();
-        }, typingDuration);
-
-      }, nextMessageDelay);
-    };
-    
-    simulateReceivingMessage();
-
-    // Clean up the timeout on component unmount
-    return () => clearTimeout(timeoutId);
-  }, [recipientUser.id]);
-
-
-  const handleSendMessage = (text: string) => {
-    const newMessage: Message = {
-      id: String(Date.now()),
-      text,
-      senderId: currentUser.id,
-      timestamp: Date.now(),
-    };
-    setMessages(prev => [...prev, newMessage]);
-  };
+    const router = useRouter();
 
   return (
-    <Card className="w-full max-w-2xl h-full sm:h-[90vh] sm:max-h-[800px] flex flex-col shadow-2xl bg-card/90 backdrop-blur-lg">
-      <CardHeader className="p-0">
-        <ChatHeader recipientUser={recipientUser} />
+    <Card className="w-full max-w-2xl h-full sm:h-[90vh] sm:max-h-[800px] flex flex-col shadow-2xl bg-card/90 backdrop-blur-lg rounded-lg overflow-hidden">
+      <CardHeader className="p-0 relative">
+        <Button 
+            variant="ghost" 
+            size="icon" 
+            className="absolute left-2 top-1/2 -translate-y-1/2 md:hidden"
+            onClick={() => router.push('/')}
+        >
+            <ArrowLeft className="h-5 w-5"/>
+            <span className="sr-only">Back</span>
+        </Button>
+        <div className="md:pl-0 pl-12">
+            <ChatHeader recipientUser={recipientUser} />
+        </div>
       </CardHeader>
       <CardContent className="flex-1 p-0 overflow-hidden">
         <ChatMessages 
@@ -108,7 +55,8 @@ export const ChatLayout = ({ currentUser, recipientUser }: ChatLayoutProps) => {
       </CardContent>
       <CardFooter className="p-0">
         <ChatInput
-          onSendMessage={handleSendMessage}
+          onSendMessage={onSendMessage}
+          onTypingChange={onTypingChange}
           recipientName={recipientUser.name}
         />
       </CardFooter>
