@@ -1,7 +1,6 @@
 "use client";
 
-import { useState, useEffect } from 'react';
-import { generateSmartReplies } from '@/ai/flows/generate-smart-replies';
+import { useState } from 'react';
 import type { User, Message } from '@/types';
 import { Card, CardContent, CardHeader, CardFooter } from '@/components/ui/card';
 import { ChatHeader } from './chat-header';
@@ -30,8 +29,6 @@ const initialMessages: Message[] = [
 
 export const ChatLayout = ({ currentUser, recipientUser }: ChatLayoutProps) => {
   const [messages, setMessages] = useState<Message[]>(initialMessages);
-  const [smartReplies, setSmartReplies] = useState<string[]>([]);
-  const [isLoadingSmartReplies, setIsLoadingSmartReplies] = useState(false);
 
   const handleSendMessage = (text: string) => {
     const newMessage: Message = {
@@ -41,9 +38,8 @@ export const ChatLayout = ({ currentUser, recipientUser }: ChatLayoutProps) => {
       timestamp: Date.now(),
     };
     setMessages(prev => [...prev, newMessage]);
-    setSmartReplies([]);
 
-    // Simulate a reply from the recipient and generate smart replies
+    // Simulate a reply from the recipient
     setTimeout(() => {
       const replyText = "That's awesome to hear! Any plans for the weekend?";
       const replyMessage: Message = {
@@ -53,33 +49,8 @@ export const ChatLayout = ({ currentUser, recipientUser }: ChatLayoutProps) => {
         timestamp: Date.now() + 1,
       };
       setMessages(prev => [...prev, replyMessage]);
-      fetchSmartReplies(replyText);
     }, 1500);
   };
-  
-  const fetchSmartReplies = async (message: string) => {
-    setIsLoadingSmartReplies(true);
-    try {
-      const result = await generateSmartReplies({ message });
-      if (result.shouldSuggest && result.replies) {
-        setSmartReplies(result.replies);
-      } else {
-        setSmartReplies([]);
-      }
-    } catch (error) {
-      console.error("Error generating smart replies:", error);
-      setSmartReplies([]);
-    } finally {
-      setIsLoadingSmartReplies(false);
-    }
-  };
-
-  useEffect(() => {
-    const lastMessage = messages[messages.length - 1];
-    if (lastMessage && lastMessage.senderId === recipientUser.id) {
-       fetchSmartReplies(lastMessage.text);
-    }
-  }, []);
 
   return (
     <Card className="w-full max-w-2xl h-full sm:h-[90vh] sm:max-h-[800px] flex flex-col shadow-2xl">
@@ -92,8 +63,6 @@ export const ChatLayout = ({ currentUser, recipientUser }: ChatLayoutProps) => {
       <CardFooter className="p-0">
         <ChatInput
           onSendMessage={handleSendMessage}
-          smartReplies={smartReplies}
-          isLoadingSmartReplies={isLoadingSmartReplies}
         />
       </CardFooter>
     </Card>
