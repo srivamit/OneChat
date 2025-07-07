@@ -17,7 +17,8 @@ const recipientUser: User = {
 
 export default function Home() {
   return (
-    <div className="flex h-svh w-full items-center justify-center bg-background p-2 sm:p-4">
+    <div className="relative flex h-svh w-full items-center justify-center bg-background p-2 sm:p-4">
+      <div className="absolute inset-0 -z-10 h-full w-full bg-background bg-[radial-gradient(hsl(var(--border))_0.5px,transparent_0.5px)] [background-size:16px_16px]"></div>
       <ChatLayout
         currentUser={currentUser}
         recipientUser={recipientUser}
