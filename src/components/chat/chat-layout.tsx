@@ -27,37 +27,61 @@ const initialMessages: Message[] = [
   },
 ];
 
-const possibleReplies = [
-    "That's awesome to hear! Any plans for the weekend?",
-    "Cool! I've been wanting to start a new project myself.",
-    "Nice! What kind of project was it?",
-    "Sounds productive! Remember to take a break.",
-    "Oh really? Tell me more!"
+const aliceConversationalSnippets = [
+    "Just saw the funniest video, I'll send it to you later!",
+    "Ugh, this coffee is not kicking in today.",
+    "What are you up to this weekend?",
+    "I'm thinking of re-watching that series we talked about.",
+    "Did you see the news about that new tech gadget?",
+    "Random thought: are hotdogs sandwiches?",
+    "My cat is doing the funniest thing right now.",
+    "I need to remember to water my plants...",
+    "Feeling a bit hungry, what's for lunch?",
+    "This music is really helping me focus."
 ];
 
 export const ChatLayout = ({ currentUser, recipientUser }: ChatLayoutProps) => {
   const [messages, setMessages] = useState<Message[]>(initialMessages);
   const [isTyping, setIsTyping] = useState(false);
-  const [replyDelay, setReplyDelay] = useState<number | null>(null);
 
+  // Simulate live messages from the recipient
   useEffect(() => {
-    if (replyDelay !== null) {
-      const timer = setTimeout(() => {
-        const replyText = possibleReplies[Math.floor(Math.random() * possibleReplies.length)];
-        const replyMessage: Message = {
-          id: String(Date.now() + 1),
-          text: replyText,
-          senderId: recipientUser.id,
-          timestamp: Date.now() + 1,
-        };
-        setIsTyping(false);
-        setMessages(prev => [...prev, replyMessage]);
-        setReplyDelay(null);
-      }, replyDelay);
+    let timeoutId: NodeJS.Timeout;
 
-      return () => clearTimeout(timer);
-    }
-  }, [replyDelay, recipientUser.id]);
+    const simulateReceivingMessage = () => {
+      // Schedule the next message reception
+      const nextMessageDelay = 8000 + Math.random() * 7000; // 8-15 seconds
+
+      timeoutId = setTimeout(() => {
+        setIsTyping(true);
+        const typingDuration = 1000 + Math.random() * 1500; // Recipient "types" for 1-2.5 seconds
+
+        // After "typing", send the message
+        setTimeout(() => {
+          const replyText = aliceConversationalSnippets[Math.floor(Math.random() * aliceConversationalSnippets.length)];
+          const newMessage: Message = {
+            id: String(Date.now()),
+            text: replyText,
+            senderId: recipientUser.id,
+            timestamp: Date.now(),
+          };
+
+          setIsTyping(false);
+          setMessages(prev => [...prev, newMessage]);
+          
+          // Trigger the next cycle
+          simulateReceivingMessage();
+        }, typingDuration);
+
+      }, nextMessageDelay);
+    };
+    
+    simulateReceivingMessage();
+
+    // Clean up the timeout on component unmount
+    return () => clearTimeout(timeoutId);
+  }, [recipientUser.id]);
+
 
   const handleSendMessage = (text: string) => {
     const newMessage: Message = {
@@ -67,10 +91,6 @@ export const ChatLayout = ({ currentUser, recipientUser }: ChatLayoutProps) => {
       timestamp: Date.now(),
     };
     setMessages(prev => [...prev, newMessage]);
-
-    // Simulate a reply from the recipient
-    setIsTyping(true);
-    setReplyDelay(1500 + Math.random() * 1000);
   };
 
   return (
